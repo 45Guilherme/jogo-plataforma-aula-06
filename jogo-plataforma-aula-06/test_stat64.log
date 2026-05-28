@@ -1,0 +1,6 @@
+test_stat64.c: In function 'main':
+test_stat64.c:1:20: warning: implicit declaration of function 'stat64i32' [-Wimplicit-function-declaration]
+    1 | int main(){ return stat64i32(0,0); }
+      |                    ^~~~~~~~~
+C:/Strawberry/c/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: C:\Users\TONYST~1\AppData\Local\Temp\cc02HM22.o:test_stat64.c:(.text+0x18): undefined reference to `stat64i32'
+collect2.exe: error: ld returned 1 exit status
