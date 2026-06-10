@@ -61,7 +61,7 @@ Jogador *criarJogador( float x, float y, float w, float h ) {
     novoJogador->frenagem = 1800;
 
     novoJogador->quantidadePulos = 0;
-    novoJogador->quantidadeMaxPulos = 1;
+    novoJogador->quantidadeMaxPulos = 3;
 
     // ===== SISTEMA DE ANÉIS E VIDAS =====
     novoJogador->quantidadeAneis = 0;

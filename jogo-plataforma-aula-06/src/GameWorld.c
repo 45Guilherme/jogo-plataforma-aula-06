@@ -68,10 +68,19 @@ void updateGameWorld( GameWorld *gw, float delta ) {
     Jogador *j = gw->jogador;
 
     atualizarCronometro( j, delta, gw );
+    if ( j->quantidadeVidas <= 0 ) {
+        reiniciar( gw );
+        return;
+    }
 
     atualizarMapa( gw->mapa, gw, delta );
     entradaJogador( j, delta );
     atualizarJogador( j, gw, delta );
+    if ( j->quantidadeVidas <= 0 ) {
+        reiniciar( gw );
+        return;
+    }
+
     atualizarCamera( gw );
 }
 

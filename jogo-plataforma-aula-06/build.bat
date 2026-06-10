@@ -72,7 +72,7 @@ GOTO nextStep
 
 :compile
 ECHO Compiling...
-gcc src/*.c -o %CompiledFile% -O1 -Wall -Wextra -Wno-unused-parameter -pedantic-errors -std=c99 -Wno-missing-braces -I src/include/ -L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
+x86_64-w64-mingw32-gcc src/*.c -o %CompiledFile% -O1 -Wall -Wextra -Wno-unused-parameter -pedantic-errors -std=c99 -Wno-missing-braces -I src/include/ -L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
 GOTO nextStep
 
 :run

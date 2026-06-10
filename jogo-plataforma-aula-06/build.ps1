@@ -37,7 +37,7 @@ if ( $clean -or $cleanAndCompile -or $all ) {
 # compile
 if ( $compile -or $cleanAndCompile -or $compileAndRun -or $all ) {
     Write-Host "Compiling..."
-    gcc src/*.c -o $CompiledFile `
+    x86_64-w64-mingw32-gcc src/*.c -o $CompiledFile `
         -O1 `
         -Wall `
         -Wextra `
