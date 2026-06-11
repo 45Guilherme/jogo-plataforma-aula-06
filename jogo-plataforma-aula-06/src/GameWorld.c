@@ -24,16 +24,38 @@
 //#undef RAYGUI_IMPLEMENTATION     // raygui.h
 
 static void desenharFundo( GameWorld *gw );
+static void desenharAgua( GameWorld *gw );
+static void desenharMola( Rectangle mola, Color corPrincipal, float compressao );
+static void desenharMolas( GameWorld *gw );
+static void desenharMenu( GameWorld *gw );
 static void atualizarCamera( GameWorld *gw );
 
 static void inicializar( GameWorld *gw );
 static void reiniciar( GameWorld *gw );
+
+static const char *NOMES_MAPAS[] = {
+    "Green Hill original",
+    "Fase da agua",
+    "Mapa de teste"
+};
+
+static const char *ARQUIVOS_MAPAS[] = {
+    "resources/mapas/mapa01.txt",
+    "resources/mapas/mapaFigura.txt",
+    "resources/mapas/mapaTeste.txt"
+};
+
+static const int QUANTIDADE_MAPAS = 3;
 
 /**
  * @brief Cria uma instância alocada dinamicamente da struct GameWorld.
  */
 GameWorld *createGameWorld( void ) {
     GameWorld *gw = (GameWorld*) malloc( sizeof( GameWorld ) );
+    gw->mapa = NULL;
+    gw->jogador = NULL;
+    gw->menuAtivo = true;
+    gw->mapaSelecionado = 1;
     inicializar( gw );
     return gw;
 }
@@ -65,7 +87,45 @@ void updateGameWorld( GameWorld *gw, float delta ) {
         return;
     }
 
+    if ( gw->menuAtivo ) {
+        if ( IsKeyPressed( KEY_DOWN ) ) {
+            gw->mapaSelecionado = ( gw->mapaSelecionado + 1 ) % QUANTIDADE_MAPAS;
+        } else if ( IsKeyPressed( KEY_UP ) ) {
+            gw->mapaSelecionado--;
+            if ( gw->mapaSelecionado < 0 ) {
+                gw->mapaSelecionado = QUANTIDADE_MAPAS - 1;
+            }
+        } else if ( IsKeyPressed( KEY_ONE ) ) {
+            gw->mapaSelecionado = 0;
+        } else if ( IsKeyPressed( KEY_TWO ) ) {
+            gw->mapaSelecionado = 1;
+        } else if ( IsKeyPressed( KEY_THREE ) ) {
+            gw->mapaSelecionado = 2;
+        }
+
+        if ( IsKeyPressed( KEY_ENTER ) || IsKeyPressed( KEY_SPACE ) ) {
+            gw->menuAtivo = false;
+            reiniciar( gw );
+        }
+
+        return;
+    }
+
     Jogador *j = gw->jogador;
+
+    if ( gw->jogadorNaAgua ) {
+        gw->contadorRestartAgua += delta;
+        j->vel.x = 0;
+        j->vel.y = 140;
+        j->ret.y += j->vel.y * delta;
+        atualizarCamera( gw );
+
+        if ( gw->contadorRestartAgua >= 1.0f ) {
+            reiniciar( gw );
+        }
+
+        return;
+    }
 
     atualizarCronometro( j, delta, gw );
     if ( j->quantidadeVidas <= 0 ) {
@@ -76,6 +136,31 @@ void updateGameWorld( GameWorld *gw, float delta ) {
     atualizarMapa( gw->mapa, gw, delta );
     entradaJogador( j, delta );
     atualizarJogador( j, gw, delta );
+
+    for ( int i = 0; i < gw->quantidadeMolas; i++ ) {
+        if ( j->vel.y >= 0 && CheckCollisionRecs( j->ret, gw->molas[i] ) ) {
+            j->ret.y = gw->molas[i].y - j->ret.height;
+            gw->compressaoMolas[i] = 18.0f;
+            j->vel.y = -700;
+            j->quantidadePulos = 0;
+            j->estado = ESTADO_JOGADOR_PULANDO;
+            PlaySound( rm.somMola );
+        } else if ( gw->compressaoMolas[i] > 0.0f ) {
+            gw->compressaoMolas[i] -= 60.0f * delta;
+            if ( gw->compressaoMolas[i] < 0.0f ) {
+                gw->compressaoMolas[i] = 0.0f;
+            }
+        }
+    }
+
+    if ( gw->temAgua && j->ret.y + j->ret.height > gw->agua.y + 12 ) {
+        PlaySound( rm.somAgua );
+        gw->jogadorNaAgua = true;
+        gw->contadorRestartAgua = 0.0f;
+        j->vel.x = 0;
+        j->vel.y = 140;
+        return;
+    }
     if ( j->quantidadeVidas <= 0 ) {
         reiniciar( gw );
         return;
@@ -92,10 +177,21 @@ void drawGameWorld( GameWorld *gw ) {
     BeginDrawing();
     ClearBackground( (Color) { 36, 0, 180, 255 } );
 
+    if ( gw->menuAtivo ) {
+        desenharMenu( gw );
+        EndDrawing();
+        return;
+    }
+
     BeginMode2D( gw->camera );
     desenharFundo( gw );
+    desenharAgua( gw );
     desenharMapa( gw->mapa );
+    desenharMolas( gw );
     desenharJogador( gw->jogador );
+    if ( gw->jogadorNaAgua ) {
+        DrawRectangleRec( gw->agua, (Color) { 0, 156, 252, 150 } );
+    }
     EndMode2D();
 
     Jogador *j = gw->jogador;
@@ -115,6 +211,78 @@ void drawGameWorld( GameWorld *gw ) {
     DrawFPS( 10, GetScreenHeight() - 80 );
 
     EndDrawing();
+}
+
+static void desenharMenu( GameWorld *gw ) {
+
+    int largura = GetScreenWidth();
+    int x = largura / 2 - 170;
+    int y = 120;
+
+    DrawText( "ESCOLHA O MAPA", x, 60, 32, ORANGE );
+
+    for ( int i = 0; i < QUANTIDADE_MAPAS; i++ ) {
+        Color cor = i == gw->mapaSelecionado ? YELLOW : WHITE;
+        const char *marcador = i == gw->mapaSelecionado ? ">" : " ";
+        DrawText( TextFormat( "%s %d - %s", marcador, i + 1, NOMES_MAPAS[i] ), x, y + i * 42, 24, cor );
+    }
+
+    DrawText( "Use SETAS ou 1/2/3", x, y + 150, 20, LIGHTGRAY );
+    DrawText( "ENTER para jogar", x, y + 180, 20, LIGHTGRAY );
+
+}
+
+static void desenharMolas( GameWorld *gw ) {
+
+    for ( int i = 0; i < gw->quantidadeMolas; i++ ) {
+        desenharMola( gw->molas[i], i % 2 == 0 ? RED : YELLOW, gw->compressaoMolas[i] );
+    }
+
+}
+
+static void desenharMola( Rectangle mola, Color corPrincipal, float compressao ) {
+
+    float x = mola.x;
+    float y = mola.y;
+    float w = mola.width;
+    float h = mola.height;
+    Color sombra = (Color) { 80, 80, 80, 255 };
+    Color metal = (Color) { 220, 220, 220, 255 };
+
+    compressao = compressao < 0.0f ? 0.0f : compressao;
+    compressao = compressao > 18.0f ? 18.0f : compressao;
+
+    float baseY = mola.y + mola.height - 8;
+    float espacamento = 8.0f;
+
+    DrawRectangle( x, y, w, 8, corPrincipal );
+    DrawRectangle( x, baseY, w, 8, corPrincipal );
+    DrawRectangleLines( x, y, w, h, BLACK );
+
+    for ( float iy = y + 10; iy < baseY - 4; iy += espacamento ) {
+        DrawLine( x + 6, iy, x + w - 6, iy + 4, metal );
+        DrawLine( x + 6, iy + 2, x + w - 6, iy + 6, sombra );
+    }
+
+}
+
+static void desenharAgua( GameWorld *gw ) {
+
+    if ( !gw->temAgua ) {
+        return;
+    }
+
+    DrawRectangleRec( gw->agua, (Color) { 0, 156, 252, 255 } );
+
+    for ( int y = (int) gw->agua.y + 8; y < (int) ( gw->agua.y + gw->agua.height ); y += 14 ) {
+        for ( int x = (int) gw->agua.x; x < (int) ( gw->agua.x + gw->agua.width ); x += 38 ) {
+            float onda = sinf( ( x + y ) * 0.05f ) * 4.0f;
+            DrawLine( x, y + (int) onda, x + 18, y + (int) onda, (Color) { 180, 240, 255, 180 } );
+        }
+    }
+
+    DrawRectangle( gw->agua.x, gw->agua.y, gw->agua.width, 6, (Color) { 160, 240, 255, 220 } );
+
 }
 
 static void desenharFundo( GameWorld *gw ) {
@@ -165,28 +333,69 @@ static void atualizarCamera( GameWorld *gw ) {
 
 static void inicializar( GameWorld *gw ) {
 
-    //gw->mapa = carregarMapa( "resources/mapas/mapaTeste.txt" );
-    gw->mapa = carregarMapa( "resources/mapas/mapa01.txt" );
-    gw->jogador = criarJogador( GetScreenWidth() / 2 + 144, calcularAlturaMapa( gw->mapa ) - 196, 96, 96 );
+    if ( gw->mapa ) {
+        destruirMapa( gw->mapa );
+        gw->mapa = NULL;
+    }
+    if ( gw->jogador ) {
+        destruirJogador( gw->jogador );
+        gw->jogador = NULL;
+    }
 
-    gw->camera = (Camera2D) {
-        .offset = { 0 },    // deslocamento relativo da câmera em relação ao alvo
-        .target = { 0 },    // o alvo da câmera, ou seja, a coordenada em que ela está centralizada
-        .rotation = 0.0f,   // rotação da câmera em graus. o pivô é o alvo.
-        .zoom = 1.0f        // zoom da câmera. 1.0f significa sem escala
+    gw->mapa = carregarMapa( ARQUIVOS_MAPAS[gw->mapaSelecionado] );
+
+    if ( !gw->mapa ) {
+        return;
+    }
+
+    gw->jogador = criarJogador( GetScreenWidth() / 2 + 144, calcularAlturaMapa( gw->mapa ) - 196, 96, 96 );
+    gw->camera = (Camera2D){
+        .offset = { 0 },
+        .target = { 0 },
+        .rotation = 0.0f,
+        .zoom = 1.0f
     };
 
     gw->gravidade = 900;
+    gw->temAgua = gw->mapaSelecionado == 1;
+    gw->jogadorNaAgua = false;
+    gw->contadorRestartAgua = 0.0f;
+    gw->quantidadeMolas = 0;
+    gw->velocidadeLancamentoMola = 1200.0f;
+    for ( int i = 0; i < 16; i++ ) {
+        gw->compressaoMolas[i] = 0.0f;
+    }
+    gw->agua = (Rectangle){
+        .x = 0,
+        .y = calcularAlturaMapa( gw->mapa ) - 96,
+        .width = calcularLarguraMapa( gw->mapa ),
+        .height = 96
+    };
+
+    if ( gw->temAgua ) {
+        gw->quantidadeMolas = 7;
+        gw->molas[0] = (Rectangle) { 420, 420, 34, 48 };
+        gw->molas[1] = (Rectangle) { 860, 420, 34, 48 };
+        gw->molas[2] = (Rectangle) { 1300, 420, 34, 48 };
+        gw->molas[3] = (Rectangle) { 1660, 660, 34, 48 };
+        gw->molas[4] = (Rectangle) { 2050, 660, 34, 48 };
+        gw->molas[5] = (Rectangle) { 2420, 660, 34, 48 };
+        gw->molas[6] = (Rectangle) { 2700, 420, 34, 48 };
+    }
 
 }
 
 static void reiniciar( GameWorld *gw ) {
 
-    destruirMapa( gw->mapa );
-    destruirJogador( gw->jogador );
-
-    if ( IsMusicStreamPlaying( rm.musicaFase01 ) ) {
-        StopMusicStream( rm.musicaFase01 );
+    if ( gw ) {
+        if ( gw->mapa ) {
+            destruirMapa( gw->mapa );
+            gw->mapa = NULL;
+        }
+        if ( gw->jogador ) {
+            destruirJogador( gw->jogador );
+            gw->jogador = NULL;
+        }
     }
 
     inicializar( gw );

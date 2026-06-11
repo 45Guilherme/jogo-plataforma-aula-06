@@ -88,6 +88,8 @@ struct Jogador {
 
     bool freando;
 
+    float velocidadeDanoQueda;
+
     EstadoJogador estado;
     bool olhandoParaDireita;
 
@@ -99,6 +101,6 @@ struct Jogador {
     Animacao animacaoPulandoRapido;
     Animacao animacaoPulandoCorrendo;
 
-    Animacao *animacoes[7];
+    Animacao *animacoes[8];
     int quantidadeAnimacoes;
 };

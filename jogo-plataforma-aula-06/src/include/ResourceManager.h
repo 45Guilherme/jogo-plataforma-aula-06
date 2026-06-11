@@ -13,7 +13,9 @@ typedef struct ResourceManager {
 
     Texture2D texturaJogador;
     Texture2D texturaBadniks;
+    Texture2D texturaBadniksBase;
     Texture2D texturaItens;
+    Texture2D texturaAnimals;
 
     Texture2D texturaTerreno;
     Texture2D texturaFundo;
@@ -24,6 +26,8 @@ typedef struct ResourceManager {
     Sound somHitInimigo;
     Sound somMorte;
     Sound somPulo;
+    Sound somAgua;
+    Sound somMola;
 
     Music musicaFase01;
 

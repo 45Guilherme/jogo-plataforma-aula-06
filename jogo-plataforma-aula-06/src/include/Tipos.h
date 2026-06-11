@@ -37,12 +37,18 @@ typedef enum EstadoInimigoSpikes {
     ESTADO_INIMIGO_SPIKES_MORRENDO,
 } EstadoInimigoSpikes;
 
+typedef enum EstadoInimigoBatbrain {
+    ESTADO_INIMIGO_BATBRAIN_ANDANDO,
+    ESTADO_INIMIGO_BATBRAIN_MORRENDO,
+} EstadoInimigoBatbrain;
+
 /**
  * @brief Representa o tipo de um inimigo.
  */
 typedef enum TipoInimigo {
     TIPO_INIMIGO_MOTOBUG,
     TIPO_INIMIGO_SPIKES,
+    TIPO_INIMIGO_BATBRAIN,
 } TipoInimigo;
 
 /**
@@ -147,6 +153,30 @@ typedef struct InimigoSpikes {
     Animacao animacaoMorrendo;
 
 } InimigoSpikes;
+
+/**
+ * @brief Representa o inimigo do tipo Batbrain.
+ */
+typedef struct InimigoBatbrain {
+
+    Rectangle ret;
+    Vector2 vel;
+    Color cor;
+
+    float velAndando;
+    float velMaxQueda;
+
+    EstadoInimigoBatbrain estado;
+    bool ativo;
+    bool olhandoParaDireita;
+
+    Animacao *animacoes[2];
+    int quantidadeAnimacoes;
+
+    Animacao animacaoAndando;
+    Animacao animacaoMorrendo;
+
+} InimigoBatbrain;
 
 /**
  * @brief Representa um inimigo.
@@ -259,5 +289,15 @@ typedef struct GameWorld {
     Camera2D camera;
 
     float gravidade;
+    Rectangle agua;
+    bool temAgua;
+    bool jogadorNaAgua;
+    float contadorRestartAgua;
+    bool menuAtivo;
+    int mapaSelecionado;
+    Rectangle molas[16];
+    int quantidadeMolas;
+    float compressaoMolas[16];
+    float velocidadeLancamentoMola;
 
 } GameWorld;

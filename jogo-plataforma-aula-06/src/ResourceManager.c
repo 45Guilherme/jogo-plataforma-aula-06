@@ -30,7 +30,7 @@ void loadResourcesResourceManager( void ) {
         2
     );
 
-    rm.texturaBadniks = carregarTexturaAlterandoCores( 
+    rm.texturaBadniks = carregarTexturaAlterandoCores(
         "resources/imagens/sprites/badniks.png",
         (Color[]) {
             { 13, 72, 7, 255 },
@@ -41,10 +41,32 @@ void loadResourcesResourceManager( void ) {
         1
     );
 
-    rm.texturaItens = carregarTexturaAlterandoCores( 
+    rm.texturaBadniksBase = carregarTexturaAlterandoCores(
+        "resources/imagens/sprites/badniks-base.png",
+        (Color[]) {
+            { 13, 72, 7, 255 },
+        },
+        (Color[]) {
+            BLANK,
+        },
+        1
+    );
+
+    rm.texturaItens = carregarTexturaAlterandoCores(
         "resources/imagens/itens/itens.png",
         (Color[]) {
             { 16, 112, 132, 255 },
+        },
+        (Color[]) {
+            BLANK,
+        },
+        1
+    );
+
+    rm.texturaAnimals = carregarTexturaAlterandoCores(
+        "resources/imagens/sprites/animals-base.png",
+        (Color[]) {
+            { 13, 72, 7, 255 },
         },
         (Color[]) {
             BLANK,
@@ -60,7 +82,9 @@ void loadResourcesResourceManager( void ) {
     // bleeding de cor entre pixels adjacentes — efeito indesejável em pixel art.
     SetTextureFilter( rm.texturaJogador, TEXTURE_FILTER_POINT );
     SetTextureFilter( rm.texturaBadniks, TEXTURE_FILTER_POINT );
+    SetTextureFilter( rm.texturaBadniksBase, TEXTURE_FILTER_POINT );
     SetTextureFilter( rm.texturaItens, TEXTURE_FILTER_POINT );
+    SetTextureFilter( rm.texturaAnimals, TEXTURE_FILTER_POINT );
     SetTextureFilter( rm.texturaTerreno, TEXTURE_FILTER_POINT );
     SetTextureFilter( rm.texturaFundo, TEXTURE_FILTER_POINT );
 
@@ -70,6 +94,8 @@ void loadResourcesResourceManager( void ) {
     rm.somHitInimigo = LoadSound( "resources/sons/efeitos/hit-inimigo.wav" );
     rm.somMorte = LoadSound( "resources/sons/efeitos/morte.wav" );
     rm.somPulo = LoadSound( "resources/sons/efeitos/pulo.wav" );
+    rm.somAgua = LoadSound( "resources/sons/efeitos/splash.wav" );
+    rm.somMola = LoadSound( "resources/sons/efeitos/mola.wav" );
 
     rm.musicaFase01 = LoadMusicStream( "resources/sons/musicas/green-hill-zone.mp3" );
 
@@ -79,7 +105,9 @@ void unloadResourcesResourceManager( void ) {
 
     UnloadTexture( rm.texturaJogador );
     UnloadTexture( rm.texturaBadniks );
+    UnloadTexture( rm.texturaBadniksBase );
     UnloadTexture( rm.texturaItens );
+    UnloadTexture( rm.texturaAnimals );
     UnloadTexture( rm.texturaTerreno );
     UnloadTexture( rm.texturaFundo );
 
@@ -89,6 +117,8 @@ void unloadResourcesResourceManager( void ) {
     UnloadSound( rm.somHitInimigo );
     UnloadSound( rm.somMorte );
     UnloadSound( rm.somPulo );
+    UnloadSound( rm.somAgua );
+    UnloadSound( rm.somMola );
 
     UnloadMusicStream( rm.musicaFase01 );
 

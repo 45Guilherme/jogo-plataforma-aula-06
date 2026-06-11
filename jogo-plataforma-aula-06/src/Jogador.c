@@ -15,6 +15,7 @@
 #include "Inimigo.h"
 #include "InimigoMotobug.h"
 #include "InimigoSpikes.h"
+#include "InimigoBatbrain.h"
 #include "Item.h"
 #include "ItemAnel.h"
 #include "ItemAnelAzul.h"
@@ -55,6 +56,7 @@ Jogador *criarJogador( float x, float y, float w, float h ) {
     novoJogador->velCorrendo = 800;
     novoJogador->velPulo = -550;
     novoJogador->velMaxQueda = 600;
+    novoJogador->velocidadeDanoQueda = 400;
 
     novoJogador->aceleracao = 200;
     novoJogador->desaceleracao = 400;
@@ -503,6 +505,17 @@ static void resolverColisaoJogadorObstaculosMapaY( Jogador *j, Mapa *mapa ) {
             if ( retColCalculado.y + retColCalculado.height / 2 < o->ret.y + o->ret.height / 2 ) {
                 j->ret.y = o->ret.y - qa->retColisao.height - deslocamentoY;
                 j->quantidadePulos = 0;
+
+                if ( j->vel.y > j->velocidadeDanoQueda && !j->invulneravel ) {
+                    if ( j->quantidadeAneis > 0 ) {
+                        espalharAneis( j, NULL );
+                        PlaySound( rm.somHitComAnel );
+                    } else {
+                        perderVida( j, NULL );
+                        PlaySound( rm.somMorte );
+                    }
+                    j->invulneravel = true;
+                }
             } else {
                 j->ret.y = o->ret.y + o->ret.height - deslocamentoY;
             }
@@ -696,6 +709,53 @@ static void resolverColisaoJogadorInimigosMapa( Jogador *j, Mapa *mapa ) {
                 if ( j->estado >= ESTADO_JOGADOR_PULANDO && j->estado <= ESTADO_JOGADOR_PULANDO_CORRENDO ) {
                     j->vel.y = j->velPulo;
                     spikes->estado = ESTADO_INIMIGO_SPIKES_MORRENDO;
+                    adicionarPontuacao( j, 100 );
+                    PlaySound( rm.somHitInimigo );
+                } else if ( !j->invulneravel ) {
+                    if ( j->quantidadeAneis > 0 ) {
+                        espalharAneis( j, NULL );
+                        PlaySound( rm.somHitComAnel );
+                    } else {
+                        perderVida( j, NULL );
+                        PlaySound( rm.somMorte );
+                    }
+                    j->invulneravel = true;
+                }
+
+                return;
+
+            }
+
+        } else if ( inimigo->tipo == TIPO_INIMIGO_BATBRAIN ) {
+
+            InimigoBatbrain *batbrain = (InimigoBatbrain*) inimigo->objeto;
+
+            if ( !batbrain->ativo || batbrain->estado == ESTADO_INIMIGO_BATBRAIN_MORRENDO ) {
+                el = el->proximo;
+                continue;
+            }
+
+            qaInimigo = getQuadroAnimacaoAtualInimigoBatbrain( batbrain );
+            olhandoParaDireita = &batbrain->olhandoParaDireita;
+            ret = &batbrain->ret;
+
+            float deslocamentoX = *olhandoParaDireita
+                ? ret->width - qaInimigo->retColisao.x - qaInimigo->retColisao.width
+                : qaInimigo->retColisao.x;
+            float deslocamentoY = qaInimigo->retColisao.y;
+
+            Rectangle retColInimigoCalculado = {
+                ret->x + deslocamentoX,
+                ret->y + deslocamentoY,
+                qaInimigo->retColisao.width,
+                qaInimigo->retColisao.height
+            };
+
+            if ( CheckCollisionRecs( retColCalculado, retColInimigoCalculado ) ) {
+
+                if ( j->estado >= ESTADO_JOGADOR_PULANDO && j->estado <= ESTADO_JOGADOR_PULANDO_CORRENDO ) {
+                    j->vel.y = j->velPulo;
+                    batbrain->estado = ESTADO_INIMIGO_BATBRAIN_MORRENDO;
                     adicionarPontuacao( j, 100 );
                     PlaySound( rm.somHitInimigo );
                 } else if ( !j->invulneravel ) {
