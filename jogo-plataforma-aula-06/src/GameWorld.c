@@ -29,6 +29,8 @@ static void desenharMola( Rectangle mola, Color corPrincipal, float compressao )
 static void desenharMolas( GameWorld *gw );
 static void desenharMenu( GameWorld *gw );
 static void atualizarCamera( GameWorld *gw );
+static bool verificarFimDeFase( GameWorld *gw );
+static void desenharFimDeFase( GameWorld *gw );
 
 static void inicializar( GameWorld *gw );
 static void reiniciar( GameWorld *gw );
@@ -56,6 +58,9 @@ GameWorld *createGameWorld( void ) {
     gw->jogador = NULL;
     gw->menuAtivo = true;
     gw->mapaSelecionado = 1;
+    gw->mapaSelecionadoAnterior = -1;
+    gw->faseFinalizada = false;
+    gw->contadorFimFase = 0.0f;
     inicializar( gw );
     return gw;
 }
@@ -76,8 +81,26 @@ void destroyGameWorld( GameWorld *gw ) {
  */
 void updateGameWorld( GameWorld *gw, float delta ) {
 
-    if ( !IsMusicStreamPlaying( rm.musicaFase01 ) ) {
+    // Handle music transitions when map changes
+    int mapaAtual = gw->mapaSelecionado;
+    bool temAguaAtual = mapaAtual == 1;
+    
+    if ( gw->mapaSelecionadoAnterior != mapaAtual ) {
+        // Map changed - stop both musics
+        StopMusicStream( rm.musicaFase01 );
+        StopMusicStream( rm.musicaAgua );
+        gw->mapaSelecionadoAnterior = mapaAtual;
+        gw->temAgua = temAguaAtual;
+    }
+
+    if ( gw->temAgua && !IsMusicStreamPlaying( rm.musicaAgua ) ) {
+        PlayMusicStream( rm.musicaAgua );
+    } else if ( !gw->temAgua && !IsMusicStreamPlaying( rm.musicaFase01 ) ) {
         PlayMusicStream( rm.musicaFase01 );
+    }
+
+    if ( gw->temAgua ) {
+        UpdateMusicStream( rm.musicaAgua );
     } else {
         UpdateMusicStream( rm.musicaFase01 );
     }
@@ -122,6 +145,22 @@ void updateGameWorld( GameWorld *gw, float delta ) {
     atualizarMapa( gw->mapa, gw, delta );
     entradaJogador( j, delta );
     atualizarJogador( j, gw, delta );
+
+    if ( verificarFimDeFase( gw ) && !gw->faseFinalizada ) {
+        aplicarBonusFimDeFase( j );
+        TraceLog( LOG_INFO, "Fim da fase da agua!" );
+        gw->faseFinalizada = true;
+        gw->contadorFimFase = 0.0f;
+        return;
+    }
+
+    if ( gw->faseFinalizada ) {
+        gw->contadorFimFase += delta;
+        if ( gw->contadorFimFase >= 2.0f ) {
+            reiniciar( gw );
+        }
+        return;
+    }
 
     for ( int i = 0; i < gw->quantidadeMolas; i++ ) {
         if ( j->vel.y >= 0 && CheckCollisionRecs( j->ret, gw->molas[i] ) ) {
@@ -184,6 +223,12 @@ void drawGameWorld( GameWorld *gw ) {
     }
     EndMode2D();
 
+    if ( gw->faseFinalizada ) {
+        desenharFimDeFase( gw );
+        EndDrawing();
+        return;
+    }
+
     Jogador *j = gw->jogador;
     int largura = GetScreenWidth();
 
@@ -201,6 +246,31 @@ void drawGameWorld( GameWorld *gw ) {
     DrawFPS( 10, GetScreenHeight() - 80 );
 
     EndDrawing();
+}
+
+static bool verificarFimDeFase( GameWorld *gw ) {
+    if ( gw->mapa == NULL || gw->jogador == NULL ) {
+        return false;
+    }
+
+    for ( int i = 0; i < gw->mapa->quantidadeFinais; i++ ) {
+        if ( CheckCollisionRecs( gw->jogador->ret, gw->mapa->finais[i] ) ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void desenharFimDeFase( GameWorld *gw ) {
+    int largura = GetScreenWidth();
+    int altura = GetScreenHeight();
+    int bonus = calcularBonusFimDeFase( gw->jogador );
+
+    DrawRectangle( 0, 0, largura, altura, Fade( BLACK, 0.65f ) );
+    DrawText( "FIM DE FASE", largura / 2 - 115, altura / 2 - 70, 34, YELLOW );
+    DrawText( TextFormat( "BONUS +%d", bonus ), largura / 2 - 90, altura / 2 - 20, 24, WHITE );
+    DrawText( "Voltando ao menu...", largura / 2 - 125, altura / 2 + 25, 20, LIGHTGRAY );
 }
 
 static void desenharMenu( GameWorld *gw ) {
@@ -347,9 +417,12 @@ static void inicializar( GameWorld *gw ) {
     };
 
     gw->gravidade = 900;
+    gw->mapaSelecionadoAnterior = gw->mapaSelecionado;
     gw->temAgua = gw->mapaSelecionado == 1;
     gw->quantidadeMolas = 0;
     gw->velocidadeLancamentoMola = 1200.0f;
+    gw->faseFinalizada = false;
+    gw->contadorFimFase = 0.0f;
     for ( int i = 0; i < 16; i++ ) {
         gw->compressaoMolas[i] = 0.0f;
     }

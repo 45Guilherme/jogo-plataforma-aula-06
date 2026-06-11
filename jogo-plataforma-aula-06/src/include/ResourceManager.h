@@ -30,6 +30,7 @@ typedef struct ResourceManager {
     Sound somMola;
 
     Music musicaFase01;
+    Music musicaAgua;
 
 } ResourceManager;
 

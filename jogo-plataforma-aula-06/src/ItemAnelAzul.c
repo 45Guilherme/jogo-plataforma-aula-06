@@ -17,6 +17,7 @@
 #include "Tipos.h"
 
 static void desenharQuadroAnimacaoItemAnelAzul( ItemAnelAzul *item, QuadroAnimacao *qa, Color tonalidade );
+static void desenharAnelAzulProcedural( ItemAnelAzul *item, Color cor );
 static Animacao *getAnimacaoAtualItemAnelAzul( ItemAnelAzul *item );
 
 static const bool MOSTRAR_RETANGULOS = false;
@@ -46,7 +47,7 @@ ItemAnelAzul *criarItemAnelAzul( Rectangle ret, Color cor ) {
         novoItem->animacaoParado.quadros,
         novoItem->animacaoParado.quantidadeQuadros,
         100,             // duração padrão para todos os quadros
-        1, 35,           // início
+        0, 32,           // início
         16, 16,          // dimensões
         1,               // separação
         false,           // de trás para frente
@@ -66,11 +67,11 @@ ItemAnelAzul *criarItemAnelAzul( Rectangle ret, Color cor ) {
         novoItem->animacaoColetando.quadros,
         novoItem->animacaoColetando.quantidadeQuadros,
         80,               // duração padrão para todos os quadros
-        1, 52,            // início
+        0, 48,            // início
         16, 16,           // dimensões
         1,                // separação
         false,            // de trás para frente
-        (Rectangle) { 0 } // retângulo de colisão padrão para cada quadro
+        (Rectangle) { 0, 0, 32, 32 } // retângulo de colisão padrão para cada quadro
     );
 
     novoItem->animacoes[ESTADO_ITEM_ANEL_AZUL_PARADO] = &novoItem->animacaoParado; quantidadeAnimacoes++;
@@ -139,6 +140,7 @@ static void desenharQuadroAnimacaoItemAnelAzul( ItemAnelAzul *item, QuadroAnimac
             0.0f,
             tonalidade
         );
+        desenharAnelAzulProcedural( item, item->cor );
 
         if ( MOSTRAR_RETANGULOS ) {
             float xDesenho = item->ret.x + qa->retColisao.x;
@@ -148,6 +150,17 @@ static void desenharQuadroAnimacaoItemAnelAzul( ItemAnelAzul *item, QuadroAnimac
 
     }
 
+}
+
+static void desenharAnelAzulProcedural( ItemAnelAzul *item, Color cor ) {
+    float tamanho = item->ret.width < item->ret.height ? item->ret.width : item->ret.height;
+    Vector2 centro = { item->ret.x + item->ret.width / 2.0f, item->ret.y + item->ret.height / 2.0f };
+    float raioExterno = tamanho * 0.48f;
+    float raioInterno = raioExterno * 0.58f;
+
+    DrawRing( centro, raioInterno, raioExterno, 0.0f, 360.0f, 48, cor );
+    DrawRingLines( centro, raioInterno, raioExterno, 0.0f, 360.0f, 48, (Color) { 0, 95, 128, 255 } );
+    DrawRing( centro, raioInterno + 2.0f, raioExterno - 2.0f, 300.0f, 60.0f, 16, Fade( WHITE, 0.35f ) );
 }
 
 static Animacao *getAnimacaoAtualItemAnelAzul( ItemAnelAzul *item ) {

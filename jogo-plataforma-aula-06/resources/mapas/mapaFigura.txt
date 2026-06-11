@@ -1,16 +1,16 @@
-I                                                                              L
-C                                                                              E
-C                                                                              E
-C        FBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG          E
-C        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA          E
-C                                                                              E
-C               2              2                                            E
-C                     2                                                       E
-C                  a      a      a                 a      a      a      c          E
-C              FBBBBBBG          FBBBBBBG      FBBBBBBG          FBBBBBBG      E
-C              AAAAAAAA          AAAAAAAA      AAAAAAAA          AAAAAAAA      E
-C                                                                              E
-C      a   a   a        0             b   b   b        1       a   a   a      E
-C                                                                              E
+I                                                                              
+C                                                                             
+C                                                                             
+C        FBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG          
+C        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA          
+C       a       0     a        0      a   1       a       a       a         E
+C       a         a   0       1       a       a       a       a       a       E
+C                     0       1                                               E
+C                                                                       c          
+C              FBBBBBBG          FBBBBBBG      FBBBBBBG          FBBBBBBG      
+C              AAAAAAAA          AAAAAAAA      AAAAAAAA          AAAAAAAA      
+C              3                                              3                                      
+C           b       b       b       b       b       b     1     b       b   b    
+C                                                                             
 FBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG    FBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBG
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA      AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA      AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

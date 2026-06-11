@@ -17,6 +17,7 @@
 #include "Tipos.h"
 
 static void desenharQuadroAnimacaoItemAnel( ItemAnel *item, QuadroAnimacao *qa, Color tonalidade );
+static void desenharAnelProcedural( ItemAnel *item, Color cor );
 static Animacao *getAnimacaoAtualItemAnel( ItemAnel *item );
 
 static const bool MOSTRAR_RETANGULOS = false;
@@ -46,7 +47,7 @@ ItemAnel *criarItemAnel( Rectangle ret, Color cor ) {
         novoItem->animacaoParado.quadros,
         novoItem->animacaoParado.quantidadeQuadros,
         100,             // duração padrão para todos os quadros
-        1, 1,            // início
+        0, 16,           // início
         16, 16,          // dimensões
         1,               // separação
         false,           // de trás para frente
@@ -139,6 +140,7 @@ static void desenharQuadroAnimacaoItemAnel( ItemAnel *item, QuadroAnimacao *qa, 
             0.0f,
             tonalidade
         );
+        desenharAnelProcedural( item, item->cor );
 
         if ( MOSTRAR_RETANGULOS ) {
             float xDesenho = item->ret.x + qa->retColisao.x;
@@ -148,6 +150,17 @@ static void desenharQuadroAnimacaoItemAnel( ItemAnel *item, QuadroAnimacao *qa, 
 
     }
 
+}
+
+static void desenharAnelProcedural( ItemAnel *item, Color cor ) {
+    float tamanho = item->ret.width < item->ret.height ? item->ret.width : item->ret.height;
+    Vector2 centro = { item->ret.x + item->ret.width / 2.0f, item->ret.y + item->ret.height / 2.0f };
+    float raioExterno = tamanho * 0.48f;
+    float raioInterno = raioExterno * 0.58f;
+
+    DrawRing( centro, raioInterno, raioExterno, 0.0f, 360.0f, 48, cor );
+    DrawRingLines( centro, raioInterno, raioExterno, 0.0f, 360.0f, 48, (Color) { 166, 112, 0, 255 } );
+    DrawRing( centro, raioInterno + 2.0f, raioExterno - 2.0f, 300.0f, 60.0f, 16, Fade( WHITE, 0.35f ) );
 }
 
 static Animacao *getAnimacaoAtualItemAnel( ItemAnel *item ) {

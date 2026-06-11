@@ -98,6 +98,7 @@ void loadResourcesResourceManager( void ) {
     rm.somMola = LoadSound( "resources/sons/efeitos/mola.wav" );
 
     rm.musicaFase01 = LoadMusicStream( "resources/sons/musicas/green-hill-zone.mp3" );
+    rm.musicaAgua = LoadMusicStream( "resources/sons/musicas/sonic.mp3" );
 
 }
 
@@ -121,5 +122,6 @@ void unloadResourcesResourceManager( void ) {
     UnloadSound( rm.somMola );
 
     UnloadMusicStream( rm.musicaFase01 );
+    UnloadMusicStream( rm.musicaAgua );
 
 }

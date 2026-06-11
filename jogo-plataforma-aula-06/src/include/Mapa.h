@@ -38,3 +38,8 @@ int calcularLarguraMapa( Mapa *m );
  * @brief Calcula a altura do mapa.
  */
 int calcularAlturaMapa( Mapa *m );
+
+/**
+ * @brief Mata todos os inimigos do mapa.
+ */
+void matarTodosInimigos( Mapa *m );

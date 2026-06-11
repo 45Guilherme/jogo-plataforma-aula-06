@@ -19,6 +19,7 @@
 #include "ItemAnel.h"
 #include "ItemAnelAzul.h"
 #include "ItemEscudo.h"
+#include "Mapa.h"
 #include "Macros.h"
 #include "Jogador.h"
 #include "ResourceManager.h"
@@ -31,7 +32,7 @@ static Animacao *getAnimacaoAtualJogador( Jogador *j );
 static void resolverColisaoJogadorObstaculosMapaX( Jogador *j, Mapa *mapa );
 static void resolverColisaoJogadorObstaculosMapaY( Jogador *j, Mapa *mapa );
 
-static void resolverColisaoJogadorItensMapa( Jogador *j, Mapa *mapa );
+static void resolverColisaoJogadorItensMapa( Jogador *j, Mapa *mapa, GameWorld *gw );
 static void resolverColisaoJogadorInimigosMapa( Jogador *j, Mapa *mapa );
 
 static const bool MOSTRAR_RETANGULOS = false;
@@ -398,7 +399,7 @@ void atualizarJogador( Jogador *j, GameWorld *gw, float delta ) {
     j->ret.y += j->vel.y * delta;
     resolverColisaoJogadorObstaculosMapaY( j, gw->mapa );
 
-    resolverColisaoJogadorItensMapa( j, gw->mapa );
+    resolverColisaoJogadorItensMapa( j, gw->mapa, gw );
     resolverColisaoJogadorInimigosMapa( j, gw->mapa );
 
 }
@@ -574,7 +575,7 @@ static void resolverColisaoJogadorObstaculosMapaY( Jogador *j, Mapa *mapa ) {
 
 }
 
-static void resolverColisaoJogadorItensMapa( Jogador *j, Mapa *mapa ) {
+static void resolverColisaoJogadorItensMapa( Jogador *j, Mapa *mapa, GameWorld *gw ) {
 
     ElementoMapa *el = mapa->itens;
 
@@ -666,6 +667,10 @@ static void resolverColisaoJogadorItensMapa( Jogador *j, Mapa *mapa ) {
                 j->invulneravel = true;
                 j->contadorTempoInvulnerabilidade = 0.0f;
                 PlaySound( rm.somAnel );
+                
+                if ( gw->temAgua ) {
+                    matarTodosInimigos( mapa );
+                }
             }
 
         }

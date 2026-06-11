@@ -297,6 +297,9 @@ typedef struct Mapa {
     ElementoMapa *inimigos;   // marca o fim da lista
     int quantidadeInimigos;
 
+    Rectangle *finais;
+    int quantidadeFinais;
+
     float dimensaoPadraoElementos;
     int linhas;
     int colunas;
@@ -316,11 +319,14 @@ typedef struct GameWorld {
     float gravidade;
     Rectangle agua;
     bool temAgua;
+    int mapaSelecionadoAnterior;
     bool menuAtivo;
     int mapaSelecionado;
     Rectangle molas[16];
     int quantidadeMolas;
     float compressaoMolas[16];
     float velocidadeLancamentoMola;
+    bool faseFinalizada;
+    float contadorFimFase;
 
 } GameWorld;

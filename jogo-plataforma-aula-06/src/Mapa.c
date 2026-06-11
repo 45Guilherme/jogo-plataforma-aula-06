@@ -27,6 +27,7 @@
 static void inserirObstaculo( Mapa *mapa, ElementoMapa *obstaculo );
 static void inserirItem( Mapa *mapa, ElementoMapa *item );
 static void inserirInimigo( Mapa *mapa, ElementoMapa *inimigo );
+static void inserirFim( Mapa *mapa, Rectangle ret );
 
 /**
  * @brief Carrega um mapa a partir de uma arquivo.
@@ -44,6 +45,9 @@ Mapa *carregarMapa( const char *caminhoArquivo ) {
 
     novoMapa->inimigos = NULL;
     novoMapa->quantidadeInimigos = 0;
+
+    novoMapa->finais = NULL;
+    novoMapa->quantidadeFinais = 0;
 
     novoMapa->dimensaoPadraoElementos = 48;
     novoMapa->linhas = 0;
@@ -79,7 +83,19 @@ Mapa *carregarMapa( const char *caminhoArquivo ) {
                 ElementoMapa *el = (ElementoMapa*) malloc( sizeof( ElementoMapa ) );
                 el->proximo = NULL;
 
-                if ( c >= 'A' && c <= 'Z' ) {
+                if ( c == 'E' ) {
+
+                    inserirFim(
+                        novoMapa,
+                        (Rectangle) {
+                            .x = novoMapa->dimensaoPadraoElementos * colunaAtual,
+                            .y = novoMapa->dimensaoPadraoElementos * linhaAtual,
+                            .width = novoMapa->dimensaoPadraoElementos,
+                            .height = novoMapa->dimensaoPadraoElementos
+                        }
+                    );
+
+                } else if ( c >= 'A' && c <= 'Z' ) {
 
                     int deslocamento = c - 'A';
 
@@ -140,7 +156,7 @@ Mapa *carregarMapa( const char *caminhoArquivo ) {
                                     .width = 32, 
                                     .height = 32
                                 },
-                                YELLOW
+                                SKYBLUE
                             );
 
                             el->objeto = item;
@@ -330,6 +346,8 @@ void destruirMapa( Mapa *m ) {
             free( t );
         }
 
+        free( m->finais );
+
     }
 
 }
@@ -378,6 +396,13 @@ void desenharMapa( Mapa *m ) {
     while ( el != NULL ) {
         desenharInimigo( (Inimigo*) el->objeto );
         el = el->proximo;
+    }
+
+    for ( int i = 0; i < m->quantidadeFinais; i++ ) {
+        Rectangle fim = m->finais[i];
+        DrawRectangleRec( fim, Fade( GREEN, 0.25f ) );
+        DrawRectangleLines( fim.x, fim.y, fim.width, fim.height, GREEN );
+        DrawText( "FIM", (int) fim.x + 10, (int) fim.y + 14, 18, WHITE );
     }
 
 }
@@ -433,4 +458,38 @@ static void inserirInimigo( Mapa *mapa, ElementoMapa *inimigo ) {
         mapa->inimigos = inimigo;
     }
     mapa->quantidadeInimigos++;
+}
+
+static void inserirFim( Mapa *mapa, Rectangle ret ) {
+    mapa->quantidadeFinais++;
+    mapa->finais = (Rectangle*) realloc( mapa->finais, mapa->quantidadeFinais * sizeof( Rectangle ) );
+    mapa->finais[mapa->quantidadeFinais - 1] = ret;
+}
+
+/**
+ * @brief Mata todos os inimigos do mapa.
+ */
+void matarTodosInimigos( Mapa *m ) {
+    if ( m == NULL ) return;
+    ElementoMapa *el = m->inimigos;
+    while ( el != NULL ) {
+        Inimigo *inimigo = (Inimigo*) el->objeto;
+        if ( inimigo->tipo == TIPO_INIMIGO_MOTOBUG ) {
+            InimigoMotobug *motobug = (InimigoMotobug*) inimigo->objeto;
+            if ( motobug->estado == ESTADO_INIMIGO_MOTOBUG_ANDANDO ) {
+                motobug->estado = ESTADO_INIMIGO_MOTOBUG_MORRENDO;
+            }
+        } else if ( inimigo->tipo == TIPO_INIMIGO_SPIKES ) {
+            InimigoSpikes *spikes = (InimigoSpikes*) inimigo->objeto;
+            if ( spikes->estado == ESTADO_INIMIGO_SPIKES_ANDANDO ) {
+                spikes->estado = ESTADO_INIMIGO_SPIKES_MORRENDO;
+            }
+        } else if ( inimigo->tipo == TIPO_INIMIGO_PEIXE ) {
+            InimigoPeixe *peixe = (InimigoPeixe*) inimigo->objeto;
+            if ( peixe->estado == ESTADO_INIMIGO_PEIXE_NADANDO ) {
+                peixe->estado = ESTADO_INIMIGO_PEIXE_MORRENDO;
+            }
+        }
+        el = el->proximo;
+    }
 }
