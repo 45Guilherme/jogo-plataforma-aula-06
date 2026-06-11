@@ -1,9 +1,6 @@
 /**
  * @file Inimigo.c
- * @author Prof. Dr. David Buzatto
- * @brief Implementação do Inimigo.
- *
- * @copyright Copyright (c) 2026
+ * @brief Implementação do Inimigo genérico.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,25 +10,16 @@
 #include "Inimigo.h"
 #include "InimigoMotobug.h"
 #include "InimigoSpikes.h"
-#include "InimigoBatbrain.h"
+#include "InimigoPeixe.h"
 #include "Tipos.h"
 
-/**
- * @brief Cria um novo Inimigo.
- */
 Inimigo *criarInimigo( TipoInimigo tipo ) {
-
     Inimigo *novoInimigo = (Inimigo*) malloc( sizeof( Inimigo ) );
     novoInimigo->objeto = NULL;
     novoInimigo->tipo = tipo;
-
     return novoInimigo;
-
 }
 
-/**
- * @brief Destroi um inimigo.
- */
 void destruirInimigo( Inimigo *inimigo ) {
     if ( inimigo != NULL ) {
         switch ( inimigo->tipo ) {
@@ -41,8 +29,8 @@ void destruirInimigo( Inimigo *inimigo ) {
             case TIPO_INIMIGO_SPIKES:
                 destruirInimigoSpikes( (InimigoSpikes*) inimigo->objeto );
                 break;
-            case TIPO_INIMIGO_BATBRAIN:
-                destruirInimigoBatbrain( (InimigoBatbrain*) inimigo->objeto );
+            case TIPO_INIMIGO_PEIXE:
+                destruirInimigoPeixe( (InimigoPeixe*) inimigo->objeto );
                 break;
             default:
                 break;
@@ -51,11 +39,7 @@ void destruirInimigo( Inimigo *inimigo ) {
     }
 }
 
-/**
- * @brief Atualiza um inimigo.
- */
 void atualizarInimigo( Inimigo *inimigo, GameWorld *gw, float delta ) {
-
     switch ( inimigo->tipo ) {
         case TIPO_INIMIGO_MOTOBUG:
             atualizarInimigoMotobug( (InimigoMotobug*) inimigo->objeto, gw, delta );
@@ -63,20 +47,15 @@ void atualizarInimigo( Inimigo *inimigo, GameWorld *gw, float delta ) {
         case TIPO_INIMIGO_SPIKES:
             atualizarInimigoSpikes( (InimigoSpikes*) inimigo->objeto, gw, delta );
             break;
-        case TIPO_INIMIGO_BATBRAIN:
-            atualizarInimigoBatbrain( (InimigoBatbrain*) inimigo->objeto, gw, delta );
+        case TIPO_INIMIGO_PEIXE:
+            atualizarInimigoPeixe( (InimigoPeixe*) inimigo->objeto, gw, delta );
             break;
         default:
             return;
     }
-
 }
 
-/**
- * @brief Desenha um inimigo.
- */
 void desenharInimigo( Inimigo *inimigo ) {
-
     switch ( inimigo->tipo ) {
         case TIPO_INIMIGO_MOTOBUG:
             desenharInimigoMotobug( (InimigoMotobug*) inimigo->objeto );
@@ -84,26 +63,18 @@ void desenharInimigo( Inimigo *inimigo ) {
         case TIPO_INIMIGO_SPIKES:
             desenharInimigoSpikes( (InimigoSpikes*) inimigo->objeto );
             break;
-        case TIPO_INIMIGO_BATBRAIN:
-            desenharInimigoBatbrain( (InimigoBatbrain*) inimigo->objeto );
+        case TIPO_INIMIGO_PEIXE:
+            desenharInimigoPeixe( (InimigoPeixe*) inimigo->objeto );
             break;
         default:
             return;
     }
-
 }
 
-/**
- * @brief Resolve colisões do inimigo com o mapa no eixo X.
- */
 void resolverColisaoInimigoObstaculosMapaX( Inimigo *inimigo, Mapa *mapa ) {
-
     ElementoMapa *el = mapa->obstaculos;
-
     while ( el != NULL ) {
-
         QuadroAnimacao *qa = NULL;
-
         bool *olhandoParaDireita = NULL;
         Rectangle *ret = NULL;
 
@@ -117,11 +88,6 @@ void resolverColisaoInimigoObstaculosMapaX( Inimigo *inimigo, Mapa *mapa ) {
             qa = getQuadroAnimacaoAtualInimigoSpikes( spikes );
             olhandoParaDireita = &spikes->olhandoParaDireita;
             ret = &spikes->ret;
-        } else if ( inimigo->tipo == TIPO_INIMIGO_BATBRAIN ) {
-            InimigoBatbrain *batbrain = (InimigoBatbrain*) inimigo->objeto;
-            qa = getQuadroAnimacaoAtualInimigoBatbrain( batbrain );
-            olhandoParaDireita = &batbrain->olhandoParaDireita;
-            ret = &batbrain->ret;
         } else {
             el = el->proximo;
             continue;
@@ -140,7 +106,6 @@ void resolverColisaoInimigoObstaculosMapaX( Inimigo *inimigo, Mapa *mapa ) {
         };
 
         Obstaculo *o = (Obstaculo*) el->objeto;
-
         if ( CheckCollisionRecs( retColCalculado, o->ret ) ) {
             if ( retColCalculado.x + retColCalculado.width / 2 < o->ret.x + o->ret.width / 2 ) {
                 ret->x = o->ret.x - qa->retColisao.width - deslocamentoX;
@@ -152,23 +117,14 @@ void resolverColisaoInimigoObstaculosMapaX( Inimigo *inimigo, Mapa *mapa ) {
         }
 
         el = el->proximo;
-
     }
-
 }
 
-/**
- * @brief Resolve colisões do inimigo com o mapa no eixo Y.
- */
 void resolverColisaoInimigoObstaculosMapaY( Inimigo *inimigo, Mapa *mapa ) {
-
     ElementoMapa *el = mapa->obstaculos;
-
     while ( el != NULL ) {
-
         Obstaculo *o = (Obstaculo*) el->objeto;
         QuadroAnimacao *qa = NULL;
-
         bool *olhandoParaDireita = NULL;
         Rectangle *ret = NULL;
         Vector2 *vel = NULL;
@@ -185,12 +141,6 @@ void resolverColisaoInimigoObstaculosMapaY( Inimigo *inimigo, Mapa *mapa ) {
             olhandoParaDireita = &spikes->olhandoParaDireita;
             ret = &spikes->ret;
             vel = &spikes->vel;
-        } else if ( inimigo->tipo == TIPO_INIMIGO_BATBRAIN ) {
-            InimigoBatbrain *batbrain = (InimigoBatbrain*) inimigo->objeto;
-            qa = getQuadroAnimacaoAtualInimigoBatbrain( batbrain );
-            olhandoParaDireita = &batbrain->olhandoParaDireita;
-            ret = &batbrain->ret;
-            vel = &batbrain->vel;
         } else {
             el = el->proximo;
             continue;
@@ -218,7 +168,5 @@ void resolverColisaoInimigoObstaculosMapaY( Inimigo *inimigo, Mapa *mapa ) {
         }
 
         el = el->proximo;
-
     }
-
 }

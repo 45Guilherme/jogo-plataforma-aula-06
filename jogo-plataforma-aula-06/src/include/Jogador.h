@@ -35,6 +35,7 @@ void atualizarJogador( Jogador *j, GameWorld *gw, float delta );
  * @brief Desenha o jogador.
  */
 void desenharJogador( Jogador *j );
+void desenharEscudoJogador( Jogador *j );
 
 // Declarações das funções de sistemas
 void adicionarPontuacao( Jogador *j, int pontos );
@@ -87,6 +88,11 @@ struct Jogador {
     float contadorTempoPiscaPisca;
 
     bool freando;
+
+    bool escudoAtivo;
+    float escudoDuracao;
+    float contadorTempoEscudo;
+    float tempoPulsoAnimacao;
 
     float velocidadeDanoQueda;
 

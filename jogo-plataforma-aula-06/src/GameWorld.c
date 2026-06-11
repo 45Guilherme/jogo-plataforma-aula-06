@@ -113,20 +113,6 @@ void updateGameWorld( GameWorld *gw, float delta ) {
 
     Jogador *j = gw->jogador;
 
-    if ( gw->jogadorNaAgua ) {
-        gw->contadorRestartAgua += delta;
-        j->vel.x = 0;
-        j->vel.y = 140;
-        j->ret.y += j->vel.y * delta;
-        atualizarCamera( gw );
-
-        if ( gw->contadorRestartAgua >= 1.0f ) {
-            reiniciar( gw );
-        }
-
-        return;
-    }
-
     atualizarCronometro( j, delta, gw );
     if ( j->quantidadeVidas <= 0 ) {
         reiniciar( gw );
@@ -154,12 +140,13 @@ void updateGameWorld( GameWorld *gw, float delta ) {
     }
 
     if ( gw->temAgua && j->ret.y + j->ret.height > gw->agua.y + 12 ) {
-        PlaySound( rm.somAgua );
-        gw->jogadorNaAgua = true;
-        gw->contadorRestartAgua = 0.0f;
-        j->vel.x = 0;
-        j->vel.y = 140;
-        return;
+        if ( !j->escudoAtivo ) {
+            j->escudoAtivo = true;
+            j->contadorTempoEscudo = 0.0f;
+            j->invulneravel = true;
+            j->contadorTempoInvulnerabilidade = 0.0f;
+            PlaySound( rm.somAgua );
+        }
     }
     if ( j->quantidadeVidas <= 0 ) {
         reiniciar( gw );
@@ -189,8 +176,11 @@ void drawGameWorld( GameWorld *gw ) {
     desenharMapa( gw->mapa );
     desenharMolas( gw );
     desenharJogador( gw->jogador );
-    if ( gw->jogadorNaAgua ) {
-        DrawRectangleRec( gw->agua, (Color) { 0, 156, 252, 150 } );
+    if ( gw->temAgua ) {
+        desenharEscudoJogador( gw->jogador );
+    }
+    if ( gw->temAgua ) {
+        DrawRectangleRec( gw->agua, (Color) { 0, 156, 252, 130 } );
     }
     EndMode2D();
 
@@ -358,8 +348,6 @@ static void inicializar( GameWorld *gw ) {
 
     gw->gravidade = 900;
     gw->temAgua = gw->mapaSelecionado == 1;
-    gw->jogadorNaAgua = false;
-    gw->contadorRestartAgua = 0.0f;
     gw->quantidadeMolas = 0;
     gw->velocidadeLancamentoMola = 1200.0f;
     for ( int i = 0; i < 16; i++ ) {

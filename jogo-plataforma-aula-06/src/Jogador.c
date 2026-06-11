@@ -15,10 +15,10 @@
 #include "Inimigo.h"
 #include "InimigoMotobug.h"
 #include "InimigoSpikes.h"
-#include "InimigoBatbrain.h"
 #include "Item.h"
 #include "ItemAnel.h"
 #include "ItemAnelAzul.h"
+#include "ItemEscudo.h"
 #include "Macros.h"
 #include "Jogador.h"
 #include "ResourceManager.h"
@@ -87,6 +87,11 @@ Jogador *criarJogador( float x, float y, float w, float h ) {
     novoJogador->contadorTempoPiscaPisca = 0.0f;
 
     novoJogador->freando = false;
+
+    novoJogador->escudoAtivo = false;
+    novoJogador->escudoDuracao = 10.0f;
+    novoJogador->contadorTempoEscudo = 0.0f;
+    novoJogador->tempoPulsoAnimacao = 0.08f;
 
     novoJogador->estado = ESTADO_JOGADOR_PARADO;
     novoJogador->olhandoParaDireita = true;
@@ -361,6 +366,23 @@ void atualizarJogador( Jogador *j, GameWorld *gw, float delta ) {
 
     }
 
+    if ( j->escudoAtivo ) {
+
+        j->contadorTempoPiscaPisca += delta;
+        if ( j->contadorTempoPiscaPisca >= j->tempoPulsoAnimacao ) {
+            j->contadorTempoPiscaPisca = 0.0f;
+            j->piscaPisca = !j->piscaPisca;
+        }
+
+        j->contadorTempoEscudo += delta;
+        if ( j->contadorTempoEscudo >= j->escudoDuracao ) {
+            j->contadorTempoEscudo = 0.0f;
+            j->escudoAtivo = false;
+            j->piscaPisca = false;
+        }
+
+    }
+
     Animacao *animacaoAtual = getAnimacaoAtualJogador( j );
     atualizarAnimacao( animacaoAtual, delta );
 
@@ -395,6 +417,30 @@ void desenharJogador( Jogador *j ) {
         DrawRectangleRec( j->ret, Fade( j->cor, 0.5f ) );
         DrawRectangleLines( j->ret.x, j->ret.y, j->ret.width, j->ret.height, BLACK );
     }
+
+}
+
+/**
+ * @brief Desenha o escudo de água ao redor do jogador.
+ */
+void desenharEscudoJogador( Jogador *j ) {
+
+    if ( !j->escudoAtivo ) {
+        return;
+    }
+
+    float raio = 60.0f + sinf( GetTime() * 6.0f ) * 6.0f;
+    float overlay = 0.30f + sinf( GetTime() * 8.0f ) * 0.15f;
+
+    Color corInterna = (Color) { 0, 140, 202, (unsigned char)( overlay * 255 ) };
+    Color corBorda = (Color) { 140, 220, 255, 200 };
+
+    DrawCircleGradient( (Vector2){ j->ret.x + j->ret.width / 2, j->ret.y + j->ret.height / 2 }, raio, corInterna, corInterna );
+    DrawCircleLines( j->ret.x + j->ret.width / 2, j->ret.y + j->ret.height / 2, raio, corBorda );
+
+    float d = raio - 14.0f;
+    Color brilho = (Color) { 210, 250, 255, 140 };
+    DrawCircleGradient( (Vector2){ j->ret.x + j->ret.width / 2 - d * 0.4f, j->ret.y + j->ret.height / 2 - d * 0.4f }, d * 0.25f, brilho, Fade( brilho, 0.0f ) );
 
 }
 
@@ -506,7 +552,7 @@ static void resolverColisaoJogadorObstaculosMapaY( Jogador *j, Mapa *mapa ) {
                 j->ret.y = o->ret.y - qa->retColisao.height - deslocamentoY;
                 j->quantidadePulos = 0;
 
-                if ( j->vel.y > j->velocidadeDanoQueda && !j->invulneravel ) {
+                if ( j->vel.y > j->velocidadeDanoQueda && !j->invulneravel && !j->escudoAtivo ) {
                     if ( j->quantidadeAneis > 0 ) {
                         espalharAneis( j, NULL );
                         PlaySound( rm.somHitComAnel );
@@ -598,6 +644,30 @@ static void resolverColisaoJogadorItensMapa( Jogador *j, Mapa *mapa ) {
                 PlaySound( rm.somAnel );
             }
 
+        } else if ( item->tipo == TIPO_ITEM_ESCUDO ) {
+
+            ItemEscudo *itemEscudo = (ItemEscudo*) item->objeto;
+
+            if ( !itemEscudo->ativo || itemEscudo->estado == ESTADO_ITEM_ESCUDO_COLETADO ) {
+                el = el->proximo;
+                continue;
+            }
+
+            Rectangle retColItemCalculado = {
+                itemEscudo->ret.x,
+                itemEscudo->ret.y,
+                32, 32
+            };
+
+            if ( CheckCollisionRecs( retColCalculado, retColItemCalculado ) ) {
+                itemEscudo->estado = ESTADO_ITEM_ESCUDO_COLETADO;
+                j->escudoAtivo = true;
+                j->contadorTempoEscudo = 0.0f;
+                j->invulneravel = true;
+                j->contadorTempoInvulnerabilidade = 0.0f;
+                PlaySound( rm.somAnel );
+            }
+
         }
 
         el = el->proximo;
@@ -664,7 +734,7 @@ static void resolverColisaoJogadorInimigosMapa( Jogador *j, Mapa *mapa ) {
                     motobug->estado = ESTADO_INIMIGO_MOTOBUG_MORRENDO;
                     adicionarPontuacao( j, 100 );
                     PlaySound( rm.somHitInimigo );
-                } else if ( !j->invulneravel ) {
+                } else if ( !j->invulneravel && !j->escudoAtivo ) {
                     if ( j->quantidadeAneis > 0 ) {
                         espalharAneis( j, NULL );
                         PlaySound( rm.somHitComAnel );
@@ -711,54 +781,7 @@ static void resolverColisaoJogadorInimigosMapa( Jogador *j, Mapa *mapa ) {
                     spikes->estado = ESTADO_INIMIGO_SPIKES_MORRENDO;
                     adicionarPontuacao( j, 100 );
                     PlaySound( rm.somHitInimigo );
-                } else if ( !j->invulneravel ) {
-                    if ( j->quantidadeAneis > 0 ) {
-                        espalharAneis( j, NULL );
-                        PlaySound( rm.somHitComAnel );
-                    } else {
-                        perderVida( j, NULL );
-                        PlaySound( rm.somMorte );
-                    }
-                    j->invulneravel = true;
-                }
-
-                return;
-
-            }
-
-        } else if ( inimigo->tipo == TIPO_INIMIGO_BATBRAIN ) {
-
-            InimigoBatbrain *batbrain = (InimigoBatbrain*) inimigo->objeto;
-
-            if ( !batbrain->ativo || batbrain->estado == ESTADO_INIMIGO_BATBRAIN_MORRENDO ) {
-                el = el->proximo;
-                continue;
-            }
-
-            qaInimigo = getQuadroAnimacaoAtualInimigoBatbrain( batbrain );
-            olhandoParaDireita = &batbrain->olhandoParaDireita;
-            ret = &batbrain->ret;
-
-            float deslocamentoX = *olhandoParaDireita
-                ? ret->width - qaInimigo->retColisao.x - qaInimigo->retColisao.width
-                : qaInimigo->retColisao.x;
-            float deslocamentoY = qaInimigo->retColisao.y;
-
-            Rectangle retColInimigoCalculado = {
-                ret->x + deslocamentoX,
-                ret->y + deslocamentoY,
-                qaInimigo->retColisao.width,
-                qaInimigo->retColisao.height
-            };
-
-            if ( CheckCollisionRecs( retColCalculado, retColInimigoCalculado ) ) {
-
-                if ( j->estado >= ESTADO_JOGADOR_PULANDO && j->estado <= ESTADO_JOGADOR_PULANDO_CORRENDO ) {
-                    j->vel.y = j->velPulo;
-                    batbrain->estado = ESTADO_INIMIGO_BATBRAIN_MORRENDO;
-                    adicionarPontuacao( j, 100 );
-                    PlaySound( rm.somHitInimigo );
-                } else if ( !j->invulneravel ) {
+                } else if ( !j->invulneravel && !j->escudoAtivo ) {
                     if ( j->quantidadeAneis > 0 ) {
                         espalharAneis( j, NULL );
                         PlaySound( rm.somHitComAnel );

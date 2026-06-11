@@ -6,7 +6,7 @@ C        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA         
 C                                                                              E
 C               2              2                                            E
 C                     2                                                       E
-C                  a      a      a                 a      a      a             E
+C                  a      a      a                 a      a      a      c          E
 C              FBBBBBBG          FBBBBBBG      FBBBBBBG          FBBBBBBG      E
 C              AAAAAAAA          AAAAAAAA      AAAAAAAA          AAAAAAAA      E
 C                                                                              E

@@ -14,11 +14,12 @@
 #include "Mapa.h"
 #include "Inimigo.h"
 #include "InimigoMotobug.h"
+#include "InimigoPeixe.h"
 #include "InimigoSpikes.h"
-#include "InimigoBatbrain.h"
 #include "Item.h"
 #include "ItemAnel.h"
 #include "ItemAnelAzul.h"
+#include "ItemEscudo.h"
 #include "Obstaculo.h"
 #include "Tipos.h"
 #include "ResourceManager.h"
@@ -147,6 +148,25 @@ Mapa *carregarMapa( const char *caminhoArquivo ) {
 
                             break;
 
+                        case 'c':
+
+                            item = criarItem( TIPO_ITEM_ESCUDO );
+
+                            item->objeto = criarItemEscudo(
+                                (Rectangle){
+                                    .x = novoMapa->dimensaoPadraoElementos * colunaAtual,
+                                    .y = novoMapa->dimensaoPadraoElementos * linhaAtual,
+                                    .width = 32,
+                                    .height = 32
+                                },
+                                SKYBLUE
+                            );
+
+                            el->objeto = item;
+                            el->tipo = TIPO_ELEMENTO_MAPA_ITEM;
+
+                            break;
+
                         default:
                             TraceLog( LOG_ERROR, "Tipo de item desconhecido." );
                             abort();
@@ -199,18 +219,41 @@ Mapa *carregarMapa( const char *caminhoArquivo ) {
 
                             break;
 
-                        case '2':
+                        case '3':
 
-                            inimigo = criarInimigo( TIPO_INIMIGO_BATBRAIN );
+                            inimigo = criarInimigo( TIPO_INIMIGO_PEIXE );
 
-                            inimigo->objeto = criarInimigoBatbrain(
+                            inimigo->objeto = criarInimigoPeixe(
                                 (Rectangle) {
                                     .x = novoMapa->dimensaoPadraoElementos * colunaAtual,
-                                    .y = novoMapa->dimensaoPadraoElementos * linhaAtual - 50,
-                                    .width = 50,
+                                    .y = novoMapa->dimensaoPadraoElementos * linhaAtual - 12,
+                                    .width = 60,
                                     .height = 40
                                 },
-                                PURPLE
+                                YELLOW,
+                                novoMapa->dimensaoPadraoElementos * colunaAtual - 120,
+                                novoMapa->dimensaoPadraoElementos * colunaAtual + 120,
+                                novoMapa->dimensaoPadraoElementos * linhaAtual - 80,
+                                novoMapa->dimensaoPadraoElementos * linhaAtual + 80
+                            );
+
+                            el->objeto = inimigo;
+                            el->tipo = TIPO_ELEMENTO_MAPA_INIMIGO;
+
+                            break;
+
+                        case '2':
+
+                            inimigo = criarInimigo( TIPO_INIMIGO_MOTOBUG );
+
+                            inimigo->objeto = criarInimigoMotobug(
+                                (Rectangle) {
+                                    .x = novoMapa->dimensaoPadraoElementos * colunaAtual,
+                                    .y = novoMapa->dimensaoPadraoElementos * linhaAtual - 12,
+                                    .width = 80,
+                                    .height = 60
+                                },
+                                YELLOW
                             );
 
                             el->objeto = inimigo;

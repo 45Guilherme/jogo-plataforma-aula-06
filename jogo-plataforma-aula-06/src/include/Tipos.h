@@ -37,10 +37,10 @@ typedef enum EstadoInimigoSpikes {
     ESTADO_INIMIGO_SPIKES_MORRENDO,
 } EstadoInimigoSpikes;
 
-typedef enum EstadoInimigoBatbrain {
-    ESTADO_INIMIGO_BATBRAIN_ANDANDO,
-    ESTADO_INIMIGO_BATBRAIN_MORRENDO,
-} EstadoInimigoBatbrain;
+typedef enum EstadoInimigoPeixe {
+    ESTADO_INIMIGO_PEIXE_NADANDO,
+    ESTADO_INIMIGO_PEIXE_MORRENDO,
+} EstadoInimigoPeixe;
 
 /**
  * @brief Representa o tipo de um inimigo.
@@ -48,7 +48,7 @@ typedef enum EstadoInimigoBatbrain {
 typedef enum TipoInimigo {
     TIPO_INIMIGO_MOTOBUG,
     TIPO_INIMIGO_SPIKES,
-    TIPO_INIMIGO_BATBRAIN,
+    TIPO_INIMIGO_PEIXE,
 } TipoInimigo;
 
 /**
@@ -64,12 +64,18 @@ typedef enum EstadoItemAnelAzul {
     ESTADO_ITEM_ANEL_AZUL_COLETADO,
 } EstadoItemAnelAzul;
 
+typedef enum EstadoItemEscudo {
+    ESTADO_ITEM_ESCUDO_PARADO,
+    ESTADO_ITEM_ESCUDO_COLETADO,
+} EstadoItemEscudo;
+
 /**
  * @brief Representa o tipo de um item.
  */
 typedef enum TipoItem {
     TIPO_ITEM_ANEL,
     TIPO_ITEM_ANEL_AZUL,
+    TIPO_ITEM_ESCUDO,
 } TipoItem;
 
 /**
@@ -154,29 +160,29 @@ typedef struct InimigoSpikes {
 
 } InimigoSpikes;
 
-/**
- * @brief Representa o inimigo do tipo Batbrain.
- */
-typedef struct InimigoBatbrain {
+typedef struct InimigoPeixe {
 
     Rectangle ret;
     Vector2 vel;
     Color cor;
 
-    float velAndando;
-    float velMaxQueda;
+    float velocidadeNado;
+    float limiteEsquerda;
+    float limiteDireita;
+    float alturaMinima;
+    float alturaMaxima;
 
-    EstadoInimigoBatbrain estado;
+    EstadoInimigoPeixe estado;
     bool ativo;
     bool olhandoParaDireita;
 
     Animacao *animacoes[2];
     int quantidadeAnimacoes;
 
-    Animacao animacaoAndando;
+    Animacao animacaoNadando;
     Animacao animacaoMorrendo;
 
-} InimigoBatbrain;
+} InimigoPeixe;
 
 /**
  * @brief Representa um inimigo.
@@ -207,7 +213,7 @@ typedef struct ItemAnel {
 } ItemAnel;
 
 /**
- * @brief Representa um item do tipo anel.
+ * @brief Representa um item do tipo anel azul.
  */
 typedef struct ItemAnelAzul {
 
@@ -224,6 +230,25 @@ typedef struct ItemAnelAzul {
     Animacao animacaoColetando;
 
 } ItemAnelAzul;
+
+/**
+ * @brief Representa um item do tipo escudo de água.
+ */
+typedef struct ItemEscudo {
+
+    Rectangle ret;
+    Color cor;
+
+    EstadoItemEscudo estado;
+    bool ativo;
+
+    Animacao *animacoes[2];
+    int quantidadeAnimacoes;
+
+    Animacao animacaoParado;
+    Animacao animacaoColetando;
+
+} ItemEscudo;
 
 /**
  * @brief Representa um item estático do mapa.
@@ -291,8 +316,6 @@ typedef struct GameWorld {
     float gravidade;
     Rectangle agua;
     bool temAgua;
-    bool jogadorNaAgua;
-    float contadorRestartAgua;
     bool menuAtivo;
     int mapaSelecionado;
     Rectangle molas[16];
